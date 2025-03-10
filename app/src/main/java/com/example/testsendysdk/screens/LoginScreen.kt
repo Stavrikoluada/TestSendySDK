@@ -83,7 +83,7 @@ fun LoginScreen(
                                 }
                                 is LoginViewModel.Result.TwoFactorRequired -> {
                                     onNavigateToSmsCode()
-                                } //delete
+                                }
                             }
                         }
                     } else {

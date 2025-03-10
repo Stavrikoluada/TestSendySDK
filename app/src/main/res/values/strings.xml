@@ -1,3 +1,11 @@
 <resources>
     <string name="app_name">Test Sendy SDK</string>
+    <string name="telephone">Телефон</string>
+    <string name="agree_to_offer">Я соглашаюсь с условиями оферты</string>
+    <string name="incorrect_phone_number_format">Неверный формат номера телефона</string>
+    <string name="kod_sms">Код из SMS</string>
+    <string name="enter_correct_code">Введите корректный код</string>
+    <string name="continues">Продолжить</string>
+    <string name="success_telephone">Вы успешно подтвердили свой номер телефона</string>
+    <string name="success_validation">Валидация пройдена</string>
 </resources>

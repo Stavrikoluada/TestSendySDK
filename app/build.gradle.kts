@@ -49,16 +49,10 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
-    implementation(libs.coil.compose)
-
-    // WebSocket
-    implementation(libs.nv.websocket.client)
-
-    // AppCompat
-    implementation(libs.androidx.appcompat)
-
-    // ConstraintLayout
     implementation(libs.androidx.constraintlayout)
+    implementation(libs.androidx.appcompat)
+    implementation(libs.gson)
+    implementation(libs.nv.websocket.client)
 
     // Navigation
     implementation(libs.androidx.navigation.compose)
@@ -67,16 +61,6 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
-
-    // Retrofit
-    implementation(libs.retrofit)
-    implementation(libs.retrofit.converter.gson)
-    implementation(libs.okhttp.logging)
-    implementation(libs.okhttp)
-
-    // Dagger
-    implementation(libs.dagger)
-    kapt(libs.dagger.compiler)
 
     // Testing
     testImplementation(libs.junit)

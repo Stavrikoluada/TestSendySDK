@@ -39,7 +39,10 @@ fun LoginScreen(
             value = phone,
             onValueChange = { newPhone ->
                 if (newPhone.startsWith("+7") || newPhone.isEmpty()) {
-                    phone = newPhone
+                    val filteredPhone = newPhone.filter { it.isDigit() || it == '+' }
+                    if (filteredPhone.length <= 12) {
+                        phone = filteredPhone
+                    }
                 }
             },
             label = { Text(text = stringResource(id = R.string.telephone)) },

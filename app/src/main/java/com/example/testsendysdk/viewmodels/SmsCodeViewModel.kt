@@ -1,10 +1,12 @@
 package com.example.testsendysdk.viewmodels
 
 import android.content.Context
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import land.sendy.pfe_sdk.api.API
+import land.sendy.pfe_sdk.model.pfe.response.AuthActivateRs
+import land.sendy.pfe_sdk.model.pfe.response.BResponse
 import land.sendy.pfe_sdk.model.types.ApiCallback
+import land.sendy.pfe_sdk.model.types.LoaderError
 
 class SmsCodeViewModel : ViewModel() {
     private val api = API.getInstance()
@@ -20,14 +22,31 @@ class SmsCodeViewModel : ViewModel() {
                 code,
                 "sms",
                 object : ApiCallback() {
-                    override fun onCompleted(res: Boolean) {
-                        onResult(res)
+                    override fun <T : BResponse?> onSuccess(data: T) {
+
+                        if (data != null) {
+                            val response = data as? AuthActivateRs
+                            if (response != null) {
+                                if (response.Errno == 0) {
+                                    onResult(true)
+                                } else {
+                                    onResult(false)
+                                }
+                            } else {
+                                onResult(false)
+                            }
+                        } else {
+                            onResult(false)
+                        }
+                    }
+
+                    override fun onFail(error: LoaderError) {
+                        onResult(false)
                     }
                 }
             )
         } catch (e: Exception) {
-            Log.e("SmsCodeViewModel", "Error validating code", e)
             onResult(false)
         }
     }
-} 
+}

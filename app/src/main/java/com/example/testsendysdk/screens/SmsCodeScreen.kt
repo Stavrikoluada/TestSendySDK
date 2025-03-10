@@ -1,14 +1,13 @@
 package com.example.testsendysdk.screens
 
-import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.testsendysdk.R
@@ -19,8 +18,9 @@ fun SmsCodeScreen(
     viewModel: SmsCodeViewModel = viewModel(),
     onSuccess: () -> Unit
 ) {
-    var smsCode by remember { mutableStateOf(TextFieldValue()) }
+    var smsCode by remember { mutableStateOf("") }
     var isError by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf("") }
     val context = LocalContext.current
 
     Column(
@@ -32,10 +32,11 @@ fun SmsCodeScreen(
     ) {
         OutlinedTextField(
             value = smsCode,
-            onValueChange = { 
-                if (it.text.length <= 6) {
-                    smsCode = it
-                    isError = it.text.length == 6 && !viewModel.isValidSmsCode(it.text)
+            onValueChange = { newValue ->
+                val filteredText = newValue.filter { it.isDigit() }
+                if (filteredText.length <= 6) {
+                    smsCode = filteredText
+                    isError = filteredText.length == 6 && !viewModel.isValidSmsCode(filteredText)
                 }
             },
             label = { Text(text = stringResource(id = R.string.kod_sms)) },
@@ -53,20 +54,31 @@ fun SmsCodeScreen(
 
         Button(
             onClick = {
-                if (viewModel.isValidSmsCode(smsCode.text)) {
-                    viewModel.validateSmsCode(context, smsCode.text) { success ->
+                if (viewModel.isValidSmsCode(smsCode)) {
+                    viewModel.validateSmsCode(context, smsCode) { success ->
                         if (success) {
                             onSuccess()
                         } else {
-                            Log.d("SmsCodeScreen", "Code validation failed.")
+                            errorMessage = "Код не верный"
                         }
                     }
+                } else {
+                    errorMessage = "Некорректный код"
                 }
             },
-            enabled = smsCode.text.length == 6 && !isError,
+            enabled = smsCode.length == 6 && !isError,
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(text = stringResource(id = R.string.continues))
+        }
+
+        if (errorMessage.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = errorMessage,
+                color = Color.Red,
+                modifier = Modifier.align(Alignment.CenterHorizontally)
+            )
         }
     }
 }

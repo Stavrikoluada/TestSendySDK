@@ -8,4 +8,6 @@
     <string name="continues">Продолжить</string>
     <string name="success_telephone">Вы успешно подтвердили свой номер телефона</string>
     <string name="success_validation">Валидация пройдена</string>
+    <string name="condition_offer">Условие оферты</string>
+    <string name="close">Закрыть</string>
 </resources>

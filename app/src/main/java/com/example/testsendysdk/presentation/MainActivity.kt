@@ -11,6 +11,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.testsendysdk.presentation.screens.LoginScreen
 import com.example.testsendysdk.presentation.screens.SmsCodeScreen
 import com.example.testsendysdk.presentation.screens.SplashScreen
+import com.example.testsendysdk.presentation.screens.SuccessScreen
 import com.example.testsendysdk.ui.theme.TestSendySDKTheme
 import land.sendy.pfe_sdk.activies.MasterActivity
 import land.sendy.pfe_sdk.api.API
@@ -59,12 +60,12 @@ fun App(api: API) {
         composable("sms_code") {
             SmsCodeScreen(
                 onSuccess = {
-                    // После успешной активации кошелька
-                    if (api.isActivated(navController.context)) {
-                        // Переходим к основному функционалу
-                    }
+                    navController.navigate("success")
                 }
             )
+        }
+        composable("success") {
+            SuccessScreen()
         }
     }
 } 

@@ -1,5 +1,6 @@
 package com.example.testsendysdk.presentation.screens
 
+import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -13,8 +14,8 @@ import com.example.testsendysdk.presentation.viewmodel.SmsCodeViewModel
 
 @Composable
 fun SmsCodeScreen(
-    onSuccess: () -> Unit,
-    viewModel: SmsCodeViewModel = viewModel()
+    viewModel: SmsCodeViewModel = viewModel(),
+    onSuccess: () -> Unit
 ) {
     var smsCode by remember { mutableStateOf(TextFieldValue()) }
     var isError by remember { mutableStateOf(false) }
@@ -54,6 +55,8 @@ fun SmsCodeScreen(
                     viewModel.validateSmsCode(context, smsCode.text) { success ->
                         if (success) {
                             onSuccess()
+                        } else {
+                            Log.d("SmsCodeScreen", "Code validation failed.")
                         }
                     }
                 }
@@ -64,4 +67,4 @@ fun SmsCodeScreen(
             Text("Продолжить")
         }
     }
-} 
+}

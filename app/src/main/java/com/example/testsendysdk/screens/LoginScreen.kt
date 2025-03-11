@@ -82,9 +82,9 @@ fun LoginScreen(
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(text = stringResource(id = R.string.agree_to_offer),
-            modifier = Modifier.clickable {
-                isAgreedToOffer = !isAgreedToOffer
-            })
+                modifier = Modifier.clickable {
+                    isAgreedToOffer = !isAgreedToOffer
+                })
         }
 
         Spacer(modifier = Modifier.height(16.dp))

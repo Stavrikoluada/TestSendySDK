@@ -1,13 +1,18 @@
 package com.example.testsendysdk.screens
 
+import android.content.Context
 import android.widget.Toast
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.testsendysdk.R
@@ -24,9 +29,17 @@ fun LoginScreen(
     val viewModel: LoginViewModel = viewModel(
         factory = LoginViewModelFactory(api)
     )
-    var phone by remember { mutableStateOf("+7") }
+    val sharedPreferences = context.getSharedPreferences("user_preferences", Context.MODE_PRIVATE)
+    val savedPhone = sharedPreferences.getString("phone_number", "+7") ?: "+7"
+    var phone by remember { mutableStateOf(TextFieldValue(savedPhone)) }
     var isLoading by remember { mutableStateOf(false) }
     var isAgreedToOffer by remember { mutableStateOf(false) }
+    var showOfferDialog by remember { mutableStateOf(false) }
+    val offerText by viewModel.offerText.observeAsState("")
+
+    LaunchedEffect(Unit) {
+        viewModel.getOfferText(context)
+    }
 
     Column(
         modifier = Modifier
@@ -38,11 +51,18 @@ fun LoginScreen(
         OutlinedTextField(
             value = phone,
             onValueChange = { newPhone ->
-                if (newPhone.startsWith("+7") || newPhone.isEmpty()) {
-                    val filteredPhone = newPhone.filter { it.isDigit() || it == '+' }
-                    if (filteredPhone.length <= 12) {
-                        phone = filteredPhone
+                val cursorPosition = newPhone.selection.start
+                val filteredPhone = newPhone.text.take(12).filter { it.isDigit() || it == '+' }
+
+                if (filteredPhone.startsWith("+7")) {
+                    phone = if (cursorPosition <= 2) {
+                        TextFieldValue(filteredPhone, TextRange(filteredPhone.length))
+                    } else {
+                        TextFieldValue(filteredPhone, TextRange(filteredPhone.length))
                     }
+                    sharedPreferences.edit().putString("phone_number", filteredPhone).apply()
+                } else {
+                    phone = TextFieldValue("+7", TextRange(2))
                 }
             },
             label = { Text(text = stringResource(id = R.string.telephone)) },
@@ -61,22 +81,34 @@ fun LoginScreen(
                 onCheckedChange = { isChecked -> isAgreedToOffer = isChecked }
             )
             Spacer(modifier = Modifier.width(8.dp))
-            Text(text = stringResource(id = R.string.agree_to_offer))
+            Text(text = stringResource(id = R.string.agree_to_offer),
+            modifier = Modifier.clickable {
+                isAgreedToOffer = !isAgreedToOffer
+            })
         }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text(text = stringResource(id = R.string.condition_offer),
+            modifier = Modifier.clickable {
+                showOfferDialog = true
+            }
+        )
 
         Spacer(modifier = Modifier.height(16.dp))
 
         Button(
             onClick = {
                 if (isAgreedToOffer) {
-                    if (viewModel.isValidPhoneNumber(phone)) {
+                    if (viewModel.isValidPhoneNumber(phone.text)) {
                         isLoading = true
-                        viewModel.register(context, phone) { result ->
+                        viewModel.register(context, phone.text) { result ->
                             isLoading = false
                             when (result) {
                                 is LoginViewModel.Result.Success -> {
                                     onNavigateToSmsCode()
                                 }
+
                                 is LoginViewModel.Result.Error -> {
                                     Toast.makeText(
                                         context,
@@ -84,6 +116,7 @@ fun LoginScreen(
                                         Toast.LENGTH_SHORT
                                     ).show()
                                 }
+
                                 is LoginViewModel.Result.TwoFactorRequired -> {
                                     onNavigateToSmsCode()
                                 }
@@ -116,5 +149,20 @@ fun LoginScreen(
                 Text("Продолжить")
             }
         }
+    }
+
+    if (showOfferDialog) {
+        AlertDialog(
+            onDismissRequest = { showOfferDialog = false },
+            title = { Text(text = stringResource(id = R.string.condition_offer)) },
+            text = {
+                Text(text = offerText.ifEmpty { "Текст соглашения не доступен." })
+            },
+            confirmButton = {
+                TextButton(onClick = { showOfferDialog = false }) {
+                    Text(text = stringResource(id = R.string.close))
+                }
+            }
+        )
     }
 }

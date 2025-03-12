@@ -54,6 +54,7 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.gson)
     implementation(libs.nv.websocket.client)
+    implementation (libs.jsoup)
 
     // Navigation
     implementation(libs.androidx.navigation.compose)
@@ -63,6 +64,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.runtime.livedata)
+    implementation(libs.firebase.crashlytics.buildtools)
 
     // Testing
     testImplementation(libs.junit)

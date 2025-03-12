@@ -4,22 +4,22 @@ import android.content.Context
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import land.sendy.pfe_sdk.api.API
 import land.sendy.pfe_sdk.model.pfe.response.AuthLoginRs
 import land.sendy.pfe_sdk.model.pfe.response.TermsOfUseRs
 import land.sendy.pfe_sdk.model.types.ApiCallback
+import org.jsoup.Jsoup
 import java.security.KeyFactory
 
 class LoginViewModel(private val api: API) : ViewModel() {
 
     private val mainHandler = Handler(Looper.getMainLooper())
-    private val _offerText = MutableLiveData<String>()
-    val offerText: LiveData<String> get() = _offerText
+
+    private val _offerText = MutableStateFlow<ResultState>(ResultState.Loading)
+    val offerText: StateFlow<ResultState> get() = _offerText
 
     fun isValidPhoneNumber(phone: String): Boolean {
         val phoneRegex = Regex("^\\+7\\s?\\d{3}\\s?\\d{3}\\s?\\d{2}\\s?\\d{2}\$")
@@ -76,42 +76,37 @@ class LoginViewModel(private val api: API) : ViewModel() {
             Log.e("LoginViewModel", "Failed to initialize crypto", e)
         }
     }
-
     fun getOfferText(context: Context) {
-        viewModelScope.launch {
-            try {
-                api.getTermsOfUseWS(context, object : ApiCallback() {
-                    override fun onCompleted(res: Boolean) {
-                        API.outLog("Запрос завершен. Результат: $res, Error: ${getErrNo()}")
+        val callback = object : ApiCallback() {
 
-                        if (!res || getErrNo() != 0) {
-                            API.outLog("Ошибка при получении текста соглашения. Код ошибки: ${getErrNo()}")
-                            _offerText.postValue("")
-                        } else {
-                            val jsonResponse = oResponse.toString()
-                            API.outLog("Ответ от сервера: $jsonResponse")
-
-                            val termsResponse = oResponse as? TermsOfUseRs
-
-                            termsResponse?.let {
-                                API.outLog("Текст соглашения:\r\n${it.TextTermsOfUse}")
-                                _offerText.postValue(it.TextTermsOfUse)
-                            } ?: run {
-                                API.outLog("Ответ невалиден или не содержит текст соглашения.")
-                                _offerText.postValue("")
-                            }
-                        }
+             override fun onCompleted(res: Boolean) {
+                if (!res || errNo != 0) {
+                    _offerText.value = ResultState.Error("Ошибка запроса")
+                } else {
+                    val termsResponse = oResponse as? TermsOfUseRs
+                    termsResponse?.let {
+                        val cleanText = Jsoup.parse(it.TextTermsOfUse ?: "").text().replace("user_agreement","")
+                        _offerText.value = ResultState.Success(cleanText)
+                    } ?: run {
+                        _offerText.value = ResultState.Error("Ответ не содержит текст соглашения")
                     }
-                })
-            } catch (e: Exception) {
-                _offerText.postValue("")
+                }
             }
         }
+
+        api.getTermsOfUse(context, callback)
     }
+
 
     sealed class Result {
         data class Success(val data: Any) : Result()
         data class Error(val message: String) : Result()
         data class TwoFactorRequired(val email: String) : Result()
+    }
+
+    sealed class ResultState {
+        data object Loading : ResultState()
+        data class Success(val termsText: String) : ResultState()
+        data class Error(val errorMessage: String) : ResultState()
     }
 } 

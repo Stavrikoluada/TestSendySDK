@@ -4,9 +4,9 @@ import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -25,7 +25,7 @@ fun LoginScreen(
     onNavigateToSmsCode: () -> Unit,
     api: API
 ) {
-    val context = LocalContext.current
+    val context = LocalContext.current.applicationContext
     val viewModel: LoginViewModel = viewModel(
         factory = LoginViewModelFactory(api)
     )
@@ -35,7 +35,7 @@ fun LoginScreen(
     var isLoading by remember { mutableStateOf(false) }
     var isAgreedToOffer by remember { mutableStateOf(false) }
     var showOfferDialog by remember { mutableStateOf(false) }
-    val offerText by viewModel.offerText.observeAsState("")
+    val offerState by viewModel.offerText.collectAsState()
 
     LaunchedEffect(Unit) {
         viewModel.getOfferText(context)
@@ -156,7 +156,21 @@ fun LoginScreen(
             onDismissRequest = { showOfferDialog = false },
             title = { Text(text = stringResource(id = R.string.condition_offer)) },
             text = {
-                Text(text = offerText.ifEmpty { "Текст соглашения не доступен." })
+                when (offerState) {
+                    is LoginViewModel.ResultState.Loading -> {
+                        Text(text = "Загрузка...")
+                    }
+                    is LoginViewModel.ResultState.Success -> {
+                        LazyColumn(modifier = Modifier.heightIn(max = 300.dp)) {
+                            item {
+                                Text(text = (offerState as LoginViewModel.ResultState.Success).termsText)
+                            }
+                        }
+                    }
+                    is LoginViewModel.ResultState.Error -> {
+                        Text(text = (offerState as LoginViewModel.ResultState.Error).errorMessage)
+                    }
+                }
             },
             confirmButton = {
                 TextButton(onClick = { showOfferDialog = false }) {
